@@ -1,4 +1,3 @@
-
 #include <WiFi.h>
 #include <WebServer.h>
 #include <Wire.h> n
@@ -9,8 +8,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 WebServer server(80);  // Object of WebServer(HTTP port, 80 is defult)
 
 #define PIN_ANALOG    34
-#define PIN_CHARGE    13
-#define PIN_DISCHARGE 14 
+#define PIN_CHARGE    14
 #define PIN_TASTER 12 
 
 
@@ -24,7 +22,7 @@ int run = 0;
 int tasterStatus;
 
 const char* ssid = "SSID"; 
-const char* password = "Password"; 
+const char* password = "password"; 
 
 const int resistorValue = 10000;
 unsigned long startTime1, startTime2, elapsedTime, endTime1, endTime2;
@@ -39,10 +37,9 @@ int b2 = 0;
 
 void setup() {
     Serial.begin(115200);
-
+    
     pinMode(PIN_TASTER, INPUT);
     pinMode(PIN_CHARGE, OUTPUT);
-    
     digitalWrite(PIN_CHARGE, LOW);
   
     //LCD an
@@ -94,7 +91,6 @@ void loop()
     }
     Serial.print(".");
     run++;
-   
     digitalWrite(PIN_CHARGE, HIGH); // Beginnt den Kondensator zu Laden
     startTime1 = millis();
     bool query = false;
@@ -119,14 +115,11 @@ void loop()
 
     
     microFarads = ((float)elapsedTime / resistorValue) * 1000;//Rechnung
-    digitalWrite(PIN_CHARGE, LOW); // Stoppt Laden
-
-    pinMode(PIN_DISCHARGE, OUTPUT); // Startet entladen  
-    digitalWrite(PIN_DISCHARGE, LOW); 
+    digitalWrite(PIN_CHARGE, LOW); // Stoppt Laden und Startet Entladen
     startTime2 = millis();  
     b2 = 0;
     while(analogRead(PIN_ANALOG) > 0) {
-      
+        Serial.println(analogRead(PIN_ANALOG));
         if(analogRead(PIN_ANALOG)%40 == 0){
         zeit2[b2] = (millis() - startTime2);
         spannung2[b2] = analogRead(PIN_ANALOG)*3330/4096;
@@ -138,8 +131,8 @@ void loop()
     endTime2 = millis()- startTime2;
     zeit2[b2] = endTime2;
     spannung2[b2] = analogRead(PIN_ANALOG)*3330/4096;
-    pinMode(PIN_DISCHARGE, INPUT); //Stoppt entladen
-
+    pinMode(PIN_CHARGE, OUTPUT);
+    
     //Datenaufbereitung
     ms1 = millisecond(zeit1, b1);
     v1 = voltage(spannung1, "0", b1);

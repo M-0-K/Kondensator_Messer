@@ -18,3 +18,6 @@ Zum ausführen des Programms benötigt man:
     
     
 
+                    !!!WICHTIG!!! 
+Um das Progamm nutzen zu können müssen Sie im Quellcode die
+SSID und das Passwort, ihres WLANS in der 25. und 26. Zeile eintragen. 

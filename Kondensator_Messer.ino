@@ -3,6 +3,7 @@
 #include <Wire.h> n
 #include <LiquidCrystal_I2C.h> 
 
+
 LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
 WebServer server(80);  // Object of WebServer(HTTP port, 80 is defult)
@@ -22,7 +23,7 @@ int run = 0;
 int tasterStatus;
 
 const char* ssid = "SSID"; 
-const char* password = "password"; 
+const char* password = "PASSWORD"; 
 
 const int resistorValue = 10000;
 unsigned long startTime1, startTime2, elapsedTime, endTime1, endTime2;
@@ -76,6 +77,9 @@ void setup() {
     server.begin();
     Serial.println("HTTP server  ist gestartet");
     delay(100); 
+
+    String MyName = MakeMine("Kondensator");
+    AdvertiseServices(MyName.c_str());
 }
 
 
@@ -110,7 +114,7 @@ void loop()
     }
      
     endTime1 = millis()- startTime1;
-    zeit1[b1] = endTime1;
+    zeit1[b1+1] = endTime1;
     spannung1[b1] = analogRead(PIN_ANALOG)*3330/4096;
 
     
@@ -121,7 +125,7 @@ void loop()
     while(analogRead(PIN_ANALOG) > 0) {
         Serial.println(analogRead(PIN_ANALOG));
         if(analogRead(PIN_ANALOG)%40 == 0){
-        zeit2[b2] = (millis() - startTime2);
+        zeit2[b2+1] = (millis() - startTime2);
         spannung2[b2] = analogRead(PIN_ANALOG)*3330/4096;
         b2++;
         delay(5);
@@ -139,7 +143,7 @@ void loop()
     ms2 = millisecond(zeit2, b2);
     v2 = voltage(spannung2, (String)spannung1[b1], b2);
 
-    if(run == 1){
+    if(run == 2){
      lcd.clear();
      lcd.print(WiFi.localIP()); 
      lcd.setCursor(0, 1);
@@ -295,3 +299,41 @@ String voltage(int spannung[], String s, int b){
     }
     return volt;
   }
+
+void AdvertiseServices(const char *MyName)
+{
+  if (MDNS.begin(MyName))
+  {
+    Serial.println(F("mDNS responder started"));
+    Serial.print(F("I am: "));
+    Serial.println(MyName);
+ 
+    // Add service to MDNS-SD
+    MDNS.addService("n8i-mlp", "tcp", 23);
+  }
+  else
+  {
+    while (1) 
+    {
+      Serial.println(F("Error setting up MDNS responder"));
+      delay(1000);
+    }
+  }
+}  
+
+uint16_t GetDeviceId()
+{
+#if defined(ARDUINO_ARCH_ESP32)
+  return ESP.getEfuseMac();
+#else
+  return ESP.getChipId();
+#endif
+}
+ 
+/* Append a semi-unique id to the name template */
+String MakeMine(const char *NameTemplate)
+{
+  uint16_t uChipId = GetDeviceId();
+  String Result = String(NameTemplate) + String(uChipId, HEX);
+  return Result;
+}
